@@ -1,0 +1,43 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout del código
+      uses: actions/checkout@v4  # Versión actualizada
+
+    - name: Instalar dependencias del sistema
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          python3-pip \
+          git \
+          zip \
+          openjdk-8-jdk \
+          libncurses5
+
+    - name: Instalar Buildozer y Cython
+      run: |
+        pip install buildozer cython
+
+    - name: Instalar Android Build-Tools 34
+      run: |
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg  # Evita errores de SDK
+        yes | ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0"
+
+    - name: Compilar APK
+      run: |
+        buildozer android debug -- --accept-license  # Acepta licencias
+
+    - name: Subir APK como artefacto
+      uses: actions/upload-artifact@v4
+      with:
+        name: HolaMundo-APK
+        path: bin/*.apk
